@@ -3,18 +3,16 @@ from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from io import BytesIO
-import requests
 
 app = Flask(__name__)
 
 def add_header_footer(doc):
     """Add Fearless branded header and footer"""
-    # Header
     section = doc.sections[0]
+    
+    # Header
     header = section.header
     header_para = header.paragraphs[0]
-    
-    # Add logo placeholder - client will replace with actual logo
     header_run = header_para.add_run("[FEARLESS LOGO]")
     header_run.font.name = 'Montserrat'
     header_run.font.size = Pt(10)
@@ -37,48 +35,77 @@ def add_header_footer(doc):
 
 def format_content(doc, text):
     """Format the main content with Fearless styling"""
-    # Convert literal \n to actual newlines
+    # Normalize all line endings
+    text = text.replace('\\r\\n', '\n')
     text = text.replace('\\n', '\n')
-    
-    # Normalize line endings (handle both Windows \r\n and Unix \n)
     text = text.replace('\r\n', '\n')
+    text = text.replace('\r', '\n')
     
-    # Split content into paragraphs
-    paragraphs = text.split('\n\n')
+    # Split by single newlines first
+    lines = text.split('\n')
     
-    for para_text in paragraphs:
-        if not para_text.strip():
+    # Process each line
+    current_para_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        
+        if not line:
+            # Empty line - end current paragraph
+            if current_para_lines:
+                process_paragraph(doc, '\n'.join(current_para_lines))
+                current_para_lines = []
             continue
-            
-        para = doc.add_paragraph()
-        para.alignment = WD_ALIGN_PARAGRAPH.LEFT
         
-        # Check if it's a heading
-        if para_text.startswith('#'):
-            heading_text = para_text.lstrip('#').strip()
-            level = para_text.count('#', 0, 3)
-            
-            run = para.add_run(heading_text)
-            
-            if level == 1:
-                run.font.name = 'Montserrat Alternates'
-                run.font.size = Pt(18)
-                run.font.bold = True
-                run.font.color.rgb = RGBColor(238, 83, 64)
-            elif level == 2:
-                run.font.name = 'Montserrat'
-                run.font.size = Pt(14)
-                run.font.bold = True
+        current_para_lines.append(line)
+    
+    # Process last paragraph
+    if current_para_lines:
+        process_paragraph(doc, '\n'.join(current_para_lines))
+
+def process_paragraph(doc, para_text):
+    """Process a single paragraph with heading detection"""
+    para = doc.add_paragraph()
+    para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    
+    # Check for heading
+    if para_text.startswith('#'):
+        # Count heading level
+        level = 0
+        for char in para_text:
+            if char == '#':
+                level += 1
             else:
-                run.font.name = 'Montserrat'
-                run.font.size = Pt(12)
-                run.font.bold = True
-        else:
-            run = para.add_run(para_text)
-            run.font.name = 'Montserrat'
-            run.font.size = Pt(10)
+                break
         
-        para.paragraph_format.space_after = Pt(12)
+        # Remove # symbols and spaces
+        heading_text = para_text[level:].strip()
+        run = para.add_run(heading_text)
+        
+        # Apply formatting based on level
+        if level == 1:  # H1
+            run.font.name = 'Montserrat Alternates'
+            run.font.size = Pt(18)
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(238, 83, 64)  # Orange-red
+        elif level == 2:  # H2
+            run.font.name = 'Montserrat'
+            run.font.size = Pt(14)
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(238, 83, 64)  # Also orange-red
+        else:  # H3+
+            run.font.name = 'Montserrat'
+            run.font.size = Pt(12)
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(0, 0, 0)  # Black
+    else:
+        # Regular text
+        run = para.add_run(para_text)
+        run.font.name = 'Montserrat'
+        run.font.size = Pt(10)
+        run.font.color.rgb = RGBColor(0, 0, 0)
+    
+    para.paragraph_format.space_after = Pt(12)
 
 @app.route('/generate-document', methods=['POST'])
 def generate_document():
@@ -91,8 +118,8 @@ def generate_document():
         
         doc = Document()
         
-        sections = doc.sections
-        for section in sections:
+        # Set margins
+        for section in doc.sections:
             section.top_margin = Inches(1)
             section.bottom_margin = Inches(1)
             section.left_margin = Inches(1)
