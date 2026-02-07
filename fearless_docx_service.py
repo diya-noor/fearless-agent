@@ -40,6 +40,9 @@ def format_content(doc, text):
     # Convert literal \n to actual newlines
     text = text.replace('\\n', '\n')
     
+    # Normalize line endings (handle both Windows \r\n and Unix \n)
+    text = text.replace('\r\n', '\n')
+    
     # Split content into paragraphs
     paragraphs = text.split('\n\n')
     
