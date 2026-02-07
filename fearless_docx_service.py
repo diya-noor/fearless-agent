@@ -142,6 +142,15 @@ def generate_document():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/debug', methods=['POST'])
+def debug():
+    data = request.json
+    return jsonify({
+        'received_data': data,
+        'text_repr': repr(data.get('text', '')),
+        'text_type': str(type(data.get('text', '')))
+    }), 200
+
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'healthy'}), 200
