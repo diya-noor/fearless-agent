@@ -83,7 +83,7 @@ def generate_document():
     try:
         data = request.json
         text = data.get('text', '')
-        
+text = text.replace('\\n', '\n')  # Convert literal \n to actual newlines        
         if not text:
             return jsonify({'error': 'No text provided'}), 400
         
