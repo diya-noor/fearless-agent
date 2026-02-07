@@ -38,9 +38,14 @@ def format_content(doc, text):
     # Strip any leading/trailing whitespace
     text = text.strip()
     
-    # Normalize all line endings
-    text = text.replace('\\r\\n', '\n')
-    text = text.replace('\\n', '\n')
+    # The text might have actual newlines OR literal \n strings
+    # First check if it has actual newlines (from webhook)
+    if '\n' not in text and '\\n' in text:
+        # Has literal \n strings, convert them
+        text = text.replace('\\r\\n', '\n')
+        text = text.replace('\\n', '\n')
+    
+    # Normalize Windows line endings to Unix
     text = text.replace('\r\n', '\n')
     text = text.replace('\r', '\n')
     
