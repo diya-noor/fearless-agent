@@ -14,12 +14,12 @@ def add_header_footer(doc):
     header = section.header
     header_para = header.paragraphs[0]
     
-    # Add logo if available - placeholder for now
-    header_run = header_para.add_run("Fearless Test")
+    # Add logo placeholder - client will replace with actual logo
+    header_run = header_para.add_run("[FEARLESS LOGO]")
     header_run.font.name = 'Montserrat'
-    header_run.font.size = Pt(12)
+    header_run.font.size = Pt(10)
     header_run.font.color.rgb = RGBColor(238, 83, 64)
-    header_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    header_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
     # Footer
     footer = section.footer
@@ -48,6 +48,7 @@ def format_content(doc, text):
             continue
             
         para = doc.add_paragraph()
+        para.alignment = WD_ALIGN_PARAGRAPH.LEFT
         
         # Check if it's a heading
         if para_text.startswith('#'):
