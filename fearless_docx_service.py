@@ -35,6 +35,9 @@ def add_header_footer(doc):
 
 def format_content(doc, text):
     """Format the main content with Fearless styling"""
+    # Strip any leading/trailing whitespace
+    text = text.strip()
+    
     # Normalize all line endings
     text = text.replace('\\r\\n', '\n')
     text = text.replace('\\n', '\n')
@@ -141,15 +144,6 @@ def generate_document():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-@app.route('/debug', methods=['POST'])
-def debug():
-    data = request.json
-    return jsonify({
-        'received_data': data,
-        'text_repr': repr(data.get('text', '')),
-        'text_type': str(type(data.get('text', '')))
-    }), 200
 
 @app.route('/health', methods=['GET'])
 def health():
