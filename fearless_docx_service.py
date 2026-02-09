@@ -2,13 +2,14 @@ from flask import Flask, request, send_file, jsonify
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from io import BytesIO
 import requests
 import logging
 
 app = Flask(__name__)
 
-# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,6 @@ def download_image(url):
         logger.info(f"Downloading: {url}")
         response = requests.get(url, timeout=10)
         logger.info(f"Response status: {response.status_code}")
-        logger.info(f"Content length: {len(response.content)} bytes")
         if response.status_code == 200:
             return BytesIO(response.content)
     except Exception as e:
@@ -33,84 +33,58 @@ def add_header_footer(doc):
     logger.info("Adding header and footer...")
     section = doc.sections[0]
     
-    # HEADER
+    # === HEADER (LEFT-ALIGNED) ===
     header = section.header
     header_para = header.paragraphs[0]
-    header_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    header_para.alignment = WD_ALIGN_PARAGRAPH.LEFT  # Changed to LEFT
     
     logo_stream = download_image(HEADER_LOGO_URL)
     if logo_stream:
         try:
             header_para.add_run().add_picture(logo_stream, height=Inches(0.6))
-            logger.info("✅ Header logo added successfully")
+            logger.info("✅ Header logo added (left-aligned)")
         except Exception as e:
-            logger.error(f"❌ Error adding header logo: {e}")
-            run = header_para.add_run("[LOGO]")
-            run.font.name = 'Montserrat'
-            run.font.size = Pt(10)
-            run.font.color.rgb = RGBColor(92, 57, 119)
-    else:
-        logger.warning("⚠️ Could not download header logo, using placeholder")
-        run = header_para.add_run("[LOGO]")
-        run.font.name = 'Montserrat'
-        run.font.size = Pt(10)
-        run.font.color.rgb = RGBColor(92, 57, 119)
+            logger.error(f"Error adding header logo: {e}")
     
-    # FOOTER
+    # === FOOTER (LOGO LEFT, TEXT RIGHT) ===
     footer = section.footer
     
     # Clear existing
     for para in footer.paragraphs:
         para.clear()
     
-    # Logo
-    logo_para = footer.add_paragraph()
-    logo_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # Create a paragraph with logo on left side
+    footer_para = footer.add_paragraph()
+    footer_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
+    # Add logo inline on the left
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
-            logo_para.add_run().add_picture(logo_stream, width=Inches(1.5))
-            logger.info("✅ Footer logo added successfully")
+            run = footer_para.add_run()
+            run.add_picture(logo_stream, height=Inches(0.35))
+            logger.info("✅ Footer logo added (left side)")
         except Exception as e:
-            logger.error(f"❌ Error adding footer logo: {e}")
-            run = logo_para.add_run("fearless")
-            run.font.name = 'Montserrat'
-            run.font.size = Pt(14)
-            run.font.bold = True
-            run.font.color.rgb = RGBColor(92, 57, 119)
-    else:
-        logger.warning("⚠️ Could not download footer logo, using placeholder")
-        run = logo_para.add_run("fearless")
-        run.font.name = 'Montserrat'
-        run.font.size = Pt(14)
-        run.font.bold = True
-        run.font.color.rgb = RGBColor(92, 57, 119)
+            logger.error(f"Error adding footer logo: {e}")
     
-    # Address
-    logger.info("Adding footer address...")
-    address_para = footer.add_paragraph()
-    address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    address_para.paragraph_format.space_before = Pt(6)
-    run = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
-    run.font.name = 'Montserrat'
-    run.font.size = Pt(7)
-    run.font.color.rgb = RGBColor(153, 153, 153)
+    # Add space after logo
+    footer_para.add_run("    ")
     
-    # Contact
-    logger.info("Adding footer contact...")
-    contact_para = footer.add_paragraph()
-    contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
-    run1 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
+    # Add address and contact info on same line
+    run1 = footer_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202  |  ")
     run1.font.name = 'Montserrat'
     run1.font.size = Pt(7)
-    run1.font.color.rgb = RGBColor(153, 153, 153)
+    run1.font.color.rgb = RGBColor(153, 153, 153)  # Gray
     
-    run2 = contact_para.add_run("fearless.tech")
+    run2 = footer_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
     run2.font.size = Pt(7)
-    run2.font.color.rgb = RGBColor(92, 57, 119)
+    run2.font.color.rgb = RGBColor(153, 153, 153)  # Gray
+    
+    run3 = footer_para.add_run("fearless.tech")
+    run3.font.name = 'Montserrat'
+    run3.font.size = Pt(7)
+    run3.font.color.rgb = RGBColor(92, 57, 119)  # Purple
     
     logger.info("✅ Footer complete")
 
@@ -141,7 +115,7 @@ def format_content(doc, text):
         process_paragraph(doc, '\n'.join(current_para_lines))
 
 def process_paragraph(doc, para_text):
-    """Process paragraph"""
+    """Process paragraph with exact sample document styling"""
     para = doc.add_paragraph()
     para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
@@ -156,26 +130,27 @@ def process_paragraph(doc, para_text):
         heading_text = para_text[level:].strip()
         run = para.add_run(heading_text)
         
-        if level == 1:  # H1 - Orange-red
+        if level == 1:  # H1 - Titles - Orange-red
             run.font.name = 'Montserrat Alternates'
-            run.font.size = Pt(18)
+            run.font.size = Pt(16)
             run.font.bold = True
-            run.font.color.rgb = RGBColor(238, 83, 64)
-        elif level == 2:  # H2 - BLACK
+            run.font.color.rgb = RGBColor(238, 83, 64)  # #ee5340 Orange-red
+        elif level == 2:  # H2 - Subtitles - Gray
             run.font.name = 'Montserrat'
             run.font.size = Pt(14)
             run.font.bold = True
-            run.font.color.rgb = RGBColor(0, 0, 0)
-        else:  # H3+ - Black
+            run.font.color.rgb = RGBColor(102, 102, 102)  # #666666 Gray
+        else:  # H3+ - Purple
             run.font.name = 'Montserrat'
             run.font.size = Pt(12)
             run.font.bold = True
-            run.font.color.rgb = RGBColor(0, 0, 0)
+            run.font.color.rgb = RGBColor(92, 57, 119)  # #5c3977 Purple
     else:
+        # Body text - Gray
         run = para.add_run(para_text)
         run.font.name = 'Montserrat'
         run.font.size = Pt(10)
-        run.font.color.rgb = RGBColor(0, 0, 0)
+        run.font.color.rgb = RGBColor(102, 102, 102)  # #666666 Gray
     
     para.paragraph_format.space_after = Pt(12)
 
@@ -188,8 +163,6 @@ def generate_document():
         
         if not text:
             return jsonify({'error': 'No text provided'}), 400
-        
-        logger.info(f"Text length: {len(text)} characters")
         
         doc = Document()
         
