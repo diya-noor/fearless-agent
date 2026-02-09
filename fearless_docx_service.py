@@ -4,92 +4,118 @@ from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from io import BytesIO
 import requests
+import logging
 
 app = Flask(__name__)
 
-# LOGO URLs - GitHub raw URLs
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 HEADER_LOGO_URL = "https://raw.githubusercontent.com/diya-noor/fearless-agent/main/fearless_icon_logo.png"
 FOOTER_LOGO_URL = "https://raw.githubusercontent.com/diya-noor/fearless-agent/main/fearless_text_logo.png"
 
 def download_image(url):
-    """Download image from URL and return as BytesIO stream"""
+    """Download image from URL"""
     try:
+        logger.info(f"Downloading: {url}")
         response = requests.get(url, timeout=10)
+        logger.info(f"Response status: {response.status_code}")
+        logger.info(f"Content length: {len(response.content)} bytes")
         if response.status_code == 200:
             return BytesIO(response.content)
-    except:
-        pass
+    except Exception as e:
+        logger.error(f"Error downloading image: {e}")
     return None
 
 def add_header_footer(doc):
-    """Add Fearless branded header and footer with logos"""
+    """Add Fearless header and footer"""
+    logger.info("Adding header and footer...")
     section = doc.sections[0]
     
-    # === HEADER ===
+    # HEADER
     header = section.header
     header_para = header.paragraphs[0]
     header_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     
-    # Add icon logo to header
     logo_stream = download_image(HEADER_LOGO_URL)
     if logo_stream:
-        header_para.add_run().add_picture(logo_stream, height=Inches(0.6))
+        try:
+            header_para.add_run().add_picture(logo_stream, height=Inches(0.6))
+            logger.info("✅ Header logo added successfully")
+        except Exception as e:
+            logger.error(f"❌ Error adding header logo: {e}")
+            run = header_para.add_run("[LOGO]")
+            run.font.name = 'Montserrat'
+            run.font.size = Pt(10)
+            run.font.color.rgb = RGBColor(92, 57, 119)
     else:
-        # Placeholder if logo can't be downloaded
-        run = header_para.add_run("[FEARLESS ICON]")
+        logger.warning("⚠️ Could not download header logo, using placeholder")
+        run = header_para.add_run("[LOGO]")
         run.font.name = 'Montserrat'
         run.font.size = Pt(10)
         run.font.color.rgb = RGBColor(92, 57, 119)
     
-    # === FOOTER ===
+    # FOOTER
     footer = section.footer
     
-    # Clear existing paragraphs
+    # Clear existing
     for para in footer.paragraphs:
         para.clear()
     
-    # Line 1: Text logo (centered)
+    # Logo
     logo_para = footer.add_paragraph()
     logo_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
-        logo_para.add_run().add_picture(logo_stream, width=Inches(1.5))
+        try:
+            logo_para.add_run().add_picture(logo_stream, width=Inches(1.5))
+            logger.info("✅ Footer logo added successfully")
+        except Exception as e:
+            logger.error(f"❌ Error adding footer logo: {e}")
+            run = logo_para.add_run("fearless")
+            run.font.name = 'Montserrat'
+            run.font.size = Pt(14)
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(92, 57, 119)
     else:
-        # Placeholder if logo can't be downloaded
+        logger.warning("⚠️ Could not download footer logo, using placeholder")
         run = logo_para.add_run("fearless")
         run.font.name = 'Montserrat'
         run.font.size = Pt(14)
         run.font.bold = True
         run.font.color.rgb = RGBColor(92, 57, 119)
     
-    # Line 2: Address
+    # Address
+    logger.info("Adding footer address...")
     address_para = footer.add_paragraph()
     address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    address_run = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
-    address_run.font.name = 'Montserrat'
-    address_run.font.size = Pt(7)
-    address_run.font.color.rgb = RGBColor(153, 153, 153)
     address_para.paragraph_format.space_before = Pt(6)
+    run = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
+    run.font.name = 'Montserrat'
+    run.font.size = Pt(7)
+    run.font.color.rgb = RGBColor(153, 153, 153)
     
-    # Line 3: Contact info
+    # Contact
+    logger.info("Adding footer contact...")
     contact_para = footer.add_paragraph()
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    # Phone and fax (gray)
-    contact_run1 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
-    contact_run1.font.name = 'Montserrat'
-    contact_run1.font.size = Pt(7)
-    contact_run1.font.color.rgb = RGBColor(153, 153, 153)
+    run1 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
+    run1.font.name = 'Montserrat'
+    run1.font.size = Pt(7)
+    run1.font.color.rgb = RGBColor(153, 153, 153)
     
-    # Website (purple)
-    contact_run2 = contact_para.add_run("fearless.tech")
-    contact_run2.font.name = 'Montserrat'
-    contact_run2.font.size = Pt(7)
-    contact_run2.font.color.rgb = RGBColor(92, 57, 119)
+    run2 = contact_para.add_run("fearless.tech")
+    run2.font.name = 'Montserrat'
+    run2.font.size = Pt(7)
+    run2.font.color.rgb = RGBColor(92, 57, 119)
+    
+    logger.info("✅ Footer complete")
 
 def format_content(doc, text):
-    """Format the main content with Fearless styling"""
+    """Format content"""
     text = text.strip()
     
     if '\n' not in text and '\\n' in text:
@@ -104,20 +130,18 @@ def format_content(doc, text):
     
     for line in lines:
         line = line.strip()
-        
         if not line:
             if current_para_lines:
                 process_paragraph(doc, '\n'.join(current_para_lines))
                 current_para_lines = []
             continue
-        
         current_para_lines.append(line)
     
     if current_para_lines:
         process_paragraph(doc, '\n'.join(current_para_lines))
 
 def process_paragraph(doc, para_text):
-    """Process a single paragraph with heading detection"""
+    """Process paragraph"""
     para = doc.add_paragraph()
     para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
@@ -132,17 +156,17 @@ def process_paragraph(doc, para_text):
         heading_text = para_text[level:].strip()
         run = para.add_run(heading_text)
         
-        if level == 1:
+        if level == 1:  # H1 - Orange-red
             run.font.name = 'Montserrat Alternates'
             run.font.size = Pt(18)
             run.font.bold = True
             run.font.color.rgb = RGBColor(238, 83, 64)
-        elif level == 2:
+        elif level == 2:  # H2 - BLACK
             run.font.name = 'Montserrat'
             run.font.size = Pt(14)
             run.font.bold = True
-            run.font.color.rgb = RGBColor(238, 83, 64)
-        else:
+            run.font.color.rgb = RGBColor(0, 0, 0)
+        else:  # H3+ - Black
             run.font.name = 'Montserrat'
             run.font.size = Pt(12)
             run.font.bold = True
@@ -158,11 +182,14 @@ def process_paragraph(doc, para_text):
 @app.route('/generate-document', methods=['POST'])
 def generate_document():
     try:
+        logger.info("📝 Generating document...")
         data = request.json
         text = data.get('text', '')
         
         if not text:
             return jsonify({'error': 'No text provided'}), 400
+        
+        logger.info(f"Text length: {len(text)} characters")
         
         doc = Document()
         
@@ -179,6 +206,8 @@ def generate_document():
         doc.save(file_stream)
         file_stream.seek(0)
         
+        logger.info("✅ Document generated successfully")
+        
         return send_file(
             file_stream,
             as_attachment=True,
@@ -187,6 +216,7 @@ def generate_document():
         )
     
     except Exception as e:
+        logger.error(f"❌ Error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/health', methods=['GET'])
