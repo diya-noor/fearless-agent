@@ -1,3 +1,4 @@
+# Force deploy: Feb 9 2026 6:30 PM
 from flask import Flask, request, send_file, jsonify
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
