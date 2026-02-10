@@ -101,7 +101,8 @@ def format_content(doc, text):
 def process_paragraph(doc, para_text):
     para = doc.add_paragraph()
     
-    if para_text.startswith('#') and (len(para_text) == 1 or para_text[1] in [' ', '#']):
+    # More lenient heading detection - allow #Title or # Title
+    if para_text.startswith('#'):
         level = 0
         idx = 0
         while idx < len(para_text) and para_text[idx] == '#':
@@ -111,6 +112,7 @@ def process_paragraph(doc, para_text):
         heading_text = para_text[level:].strip()
         
         if not heading_text:
+            # Empty heading - treat as body
             run = para.add_run(para_text)
             run.font.name = 'Montserrat'
             run.font.size = Pt(10)
@@ -121,10 +123,10 @@ def process_paragraph(doc, para_text):
         run = para.add_run(heading_text)
         
         if level == 1:
-            # # = TITLE: Orange, LEFT, 28pt, MINIMAL space after
+            # # = TITLE: Orange, LEFT, 28pt, VERY MINIMAL space after
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(32)
-            para.paragraph_format.space_after = Pt(8)  # MINIMAL space to subtitle
+            para.paragraph_format.space_after = Pt(2)  # VERY MINIMAL space to subtitle
             run.font.name = 'Montserrat Alternates'
             run.font.size = Pt(28)
             run.font.bold = True
@@ -196,6 +198,8 @@ def generate_document():
         
         if not text:
             return jsonify({'error': 'No text provided'}), 400
+        
+        logger.info(f"Input preview: {text[:200]}...")
         
         doc = Document()
         
