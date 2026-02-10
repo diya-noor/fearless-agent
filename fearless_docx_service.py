@@ -1,10 +1,8 @@
-# Force deploy: Feb 9 2026 - Table-based footer for proper alignment
+# Fearless Document Formatter - Final Version
 from flask import Flask, request, send_file, jsonify
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
 from io import BytesIO
 import requests
 import logging
@@ -41,7 +39,7 @@ def add_header_footer(doc):
     
     header_para = header.add_paragraph()
     header_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    header_para.paragraph_format.space_after = Pt(24)  # More space after logo
+    header_para.paragraph_format.space_after = Pt(24)
     
     logo_stream = download_image(HEADER_LOGO_URL)
     if logo_stream:
@@ -52,39 +50,40 @@ def add_header_footer(doc):
         except Exception as e:
             logger.error(f"Error adding header logo: {e}")
     
-    # === FOOTER (TABLE LAYOUT) ===
-    # === FOOTER (NO TABLE - USE PARAGRAPHS) ===
+    # === FOOTER ===
     footer = section.footer
     for para in footer.paragraphs:
         para.clear()
     
-    # Paragraph 1: Logo only (left)
+    # Row 1: Logo left
     logo_para = footer.add_paragraph()
     logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    logo_para.paragraph_format.space_after = Pt(0)  # No space after logo
+    logo_para.paragraph_format.space_after = Pt(0)
     
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
             run = logo_para.add_run()
             run.add_picture(logo_stream, height=Inches(0.35))
-            # Position text to the right of logo using tabs
-            logo_para.add_run("\t\t")
-            
-            # Add address on same line after logo
-            run1 = logo_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
-            run1.font.name = 'Montserrat'
-            run1.font.size = Pt(7)
-            run1.font.color.rgb = RGBColor(153, 153, 153)
-            
             logger.info("✅ Footer logo added")
         except Exception as e:
             logger.error(f"Error: {e}")
     
-    # Paragraph 2: Contact (indented to align with address)
+    # Row 2: Address - CENTERED
+    address_para = footer.add_paragraph()
+    address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    address_para.paragraph_format.space_before = Pt(0)
+    address_para.paragraph_format.space_after = Pt(0)
+    
+    run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
+    run1.font.name = 'Montserrat'
+    run1.font.size = Pt(7)
+    run1.font.color.rgb = RGBColor(153, 153, 153)
+    
+    # Row 3: Contact - CENTERED
     contact_para = footer.add_paragraph()
+    contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     contact_para.paragraph_format.space_before = Pt(0)
-    contact_para.paragraph_format.left_indent = Inches(1.6)  # Indent to align with text above
     
     run2 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
@@ -97,7 +96,9 @@ def add_header_footer(doc):
     run3.font.color.rgb = RGBColor(92, 57, 119)
     
     logger.info("✅ Footer complete")
+
 def format_content(doc, text):
+    """Format content"""
     text = text.strip()
     if '\n' not in text and '\\n' in text:
         text = text.replace('\\r\\n', '\n').replace('\\n', '\n')
@@ -119,6 +120,7 @@ def format_content(doc, text):
         process_paragraph(doc, '\n'.join(current_para_lines))
 
 def process_paragraph(doc, para_text):
+    """Process paragraph"""
     para = doc.add_paragraph()
     para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
