@@ -51,16 +51,15 @@ def add_header_footer(doc):
             logger.error(f"Error adding header logo: {e}")
     
     # === FOOTER ===
-    # === FOOTER ===
+   # === FOOTER ===
     footer = section.footer
     for para in footer.paragraphs:
         para.clear()
     
-    # Row 1: Logo left
-    logo_para = footer.add_paragraph()
-    logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    logo_para.paragraph_format.space_after = Pt(0)
+    # Single paragraph with logo and text side-by-side
+    footer_para = footer.add_paragraph()
     
+    # Add logo
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
@@ -70,33 +69,37 @@ def add_header_footer(doc):
         except Exception as e:
             logger.error(f"Error: {e}")
     
-    # Row 2: Address - CENTERED, pulled UP to align with logo
-    address_para = footer.add_paragraph()
-    address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    address_para.paragraph_format.space_before = Pt(-25)  # Negative spacing pulls it up
-    address_para.paragraph_format.space_after = Pt(0)
+    # Add spacing
+    footer_para.add_run("        ")
     
-    run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
+    # Add centered text block
+    text_run = footer_para.add_run()
+    
+    # Line 1: Address
+    run1 = footer_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
     run1.font.size = Pt(7)
     run1.font.color.rgb = RGBColor(153, 153, 153)
     
-    # Row 3: Contact - CENTERED
-    contact_para = footer.add_paragraph()
-    contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    contact_para.paragraph_format.space_before = Pt(0)
+    # Line break
+    footer_para.add_run("\n        ")
     
-    run2 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
+    # Line 2: Contact
+    run2 = footer_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
     run2.font.size = Pt(7)
     run2.font.color.rgb = RGBColor(153, 153, 153)
     
-    run3 = contact_para.add_run("fearless.tech")
+    run3 = footer_para.add_run("fearless.tech")
     run3.font.name = 'Montserrat'
     run3.font.size = Pt(7)
     run3.font.color.rgb = RGBColor(92, 57, 119)
     
+    # Center the paragraph
+    footer_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
     logger.info("✅ Footer complete")
+
 def format_content(doc, text):
     """Format content"""
     text = text.strip()
