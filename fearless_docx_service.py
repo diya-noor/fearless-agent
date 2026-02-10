@@ -53,28 +53,31 @@ def add_header_logo(header):
             logger.error(f"Error adding header logo: {e}")
     
     return header_para
-
-def add_footer_logo(footer_para):
-    """Add footer logo on left - bigger size"""
-    logo_stream = download_image(FOOTER_LOGO_URL)
-    if logo_stream:
-        try:
-            run = footer_para.add_run()
-            run.add_picture(logo_stream, height=Inches(0.25))  # Very small - pulls text up
-            logger.info("✅ Footer logo added")
-            return True
-        except Exception as e:
-            logger.error(f"Error: {e}")
-            return False
-    return False
+# === FOOTER ===
+    footer = section.footer
+    for para in footer.paragraphs:
+        para.clear()
+    
+    # Logo paragraph (left) - BOHAT TIGHT SPACING
+    logo_para = footer.add_paragraph()
+    logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    logo_para.paragraph_format.space_after = Pt(2)  # Sirf 2pt space
+    
+    add_footer_logo(logo_para)
+    
+    # First text line centered - TEXT UPAR AAYEGA
+    add_footer_text_first_line(footer)
+    
+    # Second text line centered below
+    add_footer_text_second_line(footer)
 
 def add_footer_text_first_line(footer):
-    """Add footer address centered on separate line"""
+    """Add footer address centered CLOSE to logo"""
     address_para = footer.add_paragraph()
     address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    address_para.paragraph_format.space_before = Pt(0)
-    address_para.paragraph_format.space_after = Pt(0)
-    address_para.paragraph_format.line_spacing = 0.8  # Tight
+    address_para.paragraph_format.space_before = Pt(0)  # NO space before
+    address_para.paragraph_format.space_after = Pt(0)   # NO space after
+    address_para.paragraph_format.line_spacing = 0.5    # BAHUT TIGHT - text upar aayega
     
     run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
@@ -84,11 +87,12 @@ def add_footer_text_first_line(footer):
     logger.info("✅ Footer address added")
 
 def add_footer_text_second_line(footer):
-    """Add footer contact info centered on second line"""
+    """Add footer contact info centered TIGHT"""
     contact_para = footer.add_paragraph()
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    contact_para.paragraph_format.space_before = Pt(0)
-    contact_para.paragraph_format.space_after = Pt(0)
+    contact_para.paragraph_format.space_before = Pt(0)  # NO space
+    contact_para.paragraph_format.space_after = Pt(0)   # NO space
+    contact_para.paragraph_format.line_spacing = 0.5    # BAHUT TIGHT
     
     run2 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
