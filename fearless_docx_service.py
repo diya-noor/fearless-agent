@@ -63,7 +63,7 @@ def add_header_footer(doc):
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
-            run = logo_para.add_run()
+            run = footer_para.add_run()
             run.add_picture(logo_stream, height=Inches(0.35))
             logger.info("✅ Footer logo added")
         except Exception as e:
