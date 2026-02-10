@@ -1,4 +1,4 @@
-# Fearless Document Formatter - Exact Palette Colors
+# Fearless Document Formatter - FINAL COMPLETE VERSION
 from flask import Flask, request, send_file, jsonify
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
@@ -16,8 +16,8 @@ HEADER_LOGO_URL = "https://raw.githubusercontent.com/diya-noor/fearless-agent/ma
 FOOTER_LOGO_URL = "https://raw.githubusercontent.com/diya-noor/fearless-agent/main/fearless_text_logo.png"
 
 COLORS = {
-    'orange': RGBColor(238, 83, 64),      # #EE5340 - Title, Heading 1
-    'purple': RGBColor(92, 57, 119),      # #5C3977 - Heading 2, Heading 3
+    'orange': RGBColor(238, 83, 64),      # #EE5340 - Title, Heading 2
+    'purple': RGBColor(92, 57, 119),      # #5C3977 - Heading 1, Heading 3
     'gray100': RGBColor(73, 79, 86),      # #494F56 - Dark gray (body text)
     'gray70': RGBColor(127, 131, 136),    # #7F8388 - Light gray (subtitle)
 }
@@ -34,6 +34,7 @@ def download_image(url):
 def add_header_footer(doc):
     section = doc.sections[0]
     
+    # HEADER
     header = section.header
     for para in header.paragraphs:
         para.clear()
@@ -46,6 +47,7 @@ def add_header_footer(doc):
     if logo_stream:
         header_para.add_run().add_picture(logo_stream, height=Inches(0.5))
     
+    # FOOTER
     footer = section.footer
     for para in footer.paragraphs:
         para.clear()
@@ -119,14 +121,14 @@ def process_paragraph(doc, para_text):
         run = para.add_run(heading_text)
         
         if level == 1:
-            # # = TITLE: Orange, LEFT, 28pt
+            # # = TITLE: Orange, LEFT, 28pt, MINIMAL space after
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(32)
-            para.paragraph_format.space_after = Pt(24)
+            para.paragraph_format.space_after = Pt(8)  # MINIMAL space to subtitle
             run.font.name = 'Montserrat Alternates'
             run.font.size = Pt(28)
             run.font.bold = True
-            run.font.color.rgb = COLORS['orange']  # #EE5340
+            run.font.color.rgb = COLORS['orange']  # #EE5340 Orange
             logger.info(f"✅ TITLE (Orange, Left): {heading_text}")
             
         elif level == 2:
@@ -141,39 +143,39 @@ def process_paragraph(doc, para_text):
             logger.info(f"✅ SUBTITLE (Light Gray, Left): {heading_text}")
             
         elif level == 3:
-            # ### = HEADING 1: Orange, Left, 18pt
+            # ### = HEADING 1: PURPLE, Left, 18pt
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(20)
             para.paragraph_format.space_after = Pt(16)
             run.font.name = 'Montserrat'
             run.font.size = Pt(18)
             run.font.bold = True
-            run.font.color.rgb = COLORS['orange']  # #EE5340
-            logger.info(f"✅ HEADING 1 (Orange, Left): {heading_text}")
+            run.font.color.rgb = COLORS['purple']  # #5C3977 Purple
+            logger.info(f"✅ HEADING 1 (Purple, Left): {heading_text}")
             
         elif level == 4:
-            # #### = HEADING 2: Purple, Left, 14pt
+            # #### = HEADING 2: ORANGE, Left, 14pt
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(16)
             para.paragraph_format.space_after = Pt(12)
             run.font.name = 'Montserrat'
             run.font.size = Pt(14)
             run.font.bold = True
-            run.font.color.rgb = COLORS['purple']  # #5C3977
-            logger.info(f"✅ HEADING 2 (Purple, Left): {heading_text}")
+            run.font.color.rgb = COLORS['orange']  # #EE5340 Orange
+            logger.info(f"✅ HEADING 2 (Orange, Left): {heading_text}")
             
         else:
-            # ##### = HEADING 3: Purple, Left, 12pt
+            # ##### = HEADING 3: PURPLE, Left, 12pt
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(12)
             para.paragraph_format.space_after = Pt(10)
             run.font.name = 'Montserrat'
             run.font.size = Pt(12)
             run.font.bold = True
-            run.font.color.rgb = COLORS['purple']  # #5C3977
+            run.font.color.rgb = COLORS['purple']  # #5C3977 Purple
             logger.info(f"✅ HEADING 3 (Purple, Left): {heading_text}")
     else:
-        # Body text: Dark Gray, 10pt
+        # Body text: Dark Gray, 10pt, Line height 1.5
         para.alignment = WD_ALIGN_PARAGRAPH.LEFT
         para.paragraph_format.space_before = Pt(0)
         para.paragraph_format.space_after = Pt(16)
@@ -211,7 +213,7 @@ def generate_document():
         doc.save(file_stream)
         file_stream.seek(0)
         
-        logger.info("✅ Document generated")
+        logger.info("✅ Document generated successfully")
         
         return send_file(
             file_stream,
@@ -221,6 +223,8 @@ def generate_document():
         )
     except Exception as e:
         logger.error(f"❌ Error: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 @app.route('/health', methods=['GET'])
