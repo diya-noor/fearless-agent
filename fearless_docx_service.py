@@ -1,8 +1,10 @@
-# Force deploy: Feb 9 2026 - Footer centered text, header left
+# Force deploy: Feb 9 2026 - Table-based footer for proper alignment
 from flask import Flask, request, send_file, jsonify
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from io import BytesIO
 import requests
 import logging
@@ -50,49 +52,69 @@ def add_header_footer(doc):
         except Exception as e:
             logger.error(f"Error adding header logo: {e}")
     
-    # === FOOTER ===
+    # === FOOTER (TABLE LAYOUT) ===
     footer = section.footer
     for para in footer.paragraphs:
         para.clear()
     
-    # Create single paragraph with logo and text inline
-    footer_para = footer.add_paragraph()
-    footer_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    # Create 2-column table: logo left, text right
+    table = footer.add_table(rows=1, cols=2)
+    table.autofit = False
+    table.allow_autofit = False
     
-    # Add logo
+    # Remove all borders
+    for row in table.rows:
+        for cell in row.cells:
+            cell_elem = cell._element
+            tc_pr = cell_elem.get_or_add_tcPr()
+            tc_borders = OxmlElement('w:tcBorders')
+            for border_name in ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']:
+                border = OxmlElement(f'w:{border_name}')
+                border.set(qn('w:val'), 'none')
+                tc_borders.append(border)
+            tc_pr.append(tc_borders)
+    
+    # Left cell: Logo
+    left_cell = table.rows[0].cells[0]
+    left_cell.width = Inches(1.5)
+    logo_para = left_cell.paragraphs[0]
+    logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
-            run = footer_para.add_run()
+            run = logo_para.add_run()
             run.add_picture(logo_stream, height=Inches(0.35))
             logger.info("✅ Footer logo added")
         except Exception as e:
             logger.error(f"Error: {e}")
     
-    # Add spacing after logo
-    footer_para.add_run("        ")
+    # Right cell: Text (2 lines, centered)
+    right_cell = table.rows[0].cells[1]
     
-    # Add address - same line
-    run1 = footer_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
+    # Line 1: Address
+    text_para1 = right_cell.paragraphs[0]
+    text_para1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run1 = text_para1.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
     run1.font.size = Pt(7)
     run1.font.color.rgb = RGBColor(153, 153, 153)
     
-    # Line break within same paragraph
-    footer_para.add_run("\n        ")
-    
-    # Add contact - second line, indented to align with address
-    run2 = footer_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
+    # Line 2: Contact
+    text_para2 = right_cell.add_paragraph()
+    text_para2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run2 = text_para2.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
     run2.font.size = Pt(7)
     run2.font.color.rgb = RGBColor(153, 153, 153)
     
-    run3 = footer_para.add_run("fearless.tech")
+    run3 = text_para2.add_run("fearless.tech")
     run3.font.name = 'Montserrat'
     run3.font.size = Pt(7)
     run3.font.color.rgb = RGBColor(92, 57, 119)
     
     logger.info("✅ Footer complete")
+
 def format_content(doc, text):
     text = text.strip()
     if '\n' not in text and '\\n' in text:
@@ -134,7 +156,7 @@ def process_paragraph(doc, para_text):
             run.font.size = Pt(16)
             run.font.bold = True
             run.font.color.rgb = RGBColor(238, 83, 64)  # #ee5340
-        elif level == 2:  # H2 - Orange-red (TELL ME IF WRONG!)
+        elif level == 2:  # H2 - Orange-red
             run.font.name = 'Montserrat'
             run.font.size = Pt(14)
             run.font.bold = True
