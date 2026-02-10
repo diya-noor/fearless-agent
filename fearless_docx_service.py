@@ -60,7 +60,7 @@ def add_footer_logo(footer_para):
     if logo_stream:
         try:
             run = footer_para.add_run()
-            run.add_picture(logo_stream, height=Inches(0.45))  # Bigger
+            run.add_picture(logo_stream, height=Inches(0.3))  # Even smaller
             logger.info("✅ Footer logo added")
             return True
         except Exception as e:
@@ -74,6 +74,7 @@ def add_footer_text_first_line(footer):
     address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     address_para.paragraph_format.space_before = Pt(0)
     address_para.paragraph_format.space_after = Pt(0)
+    address_para.paragraph_format.line_spacing = 0.8  # Tight
     
     run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
@@ -116,9 +117,11 @@ def add_header_footer(doc):
         para.clear()
     
     # Logo paragraph (left)
+    # Logo paragraph (left)
     logo_para = footer.add_paragraph()
     logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     logo_para.paragraph_format.space_after = Pt(0)
+    logo_para.paragraph_format.line_spacing = 0.8  # Tighter spacing
     add_footer_logo(logo_para)
     
     # First text line centered (separate paragraph)
