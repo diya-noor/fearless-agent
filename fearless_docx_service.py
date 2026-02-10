@@ -3,6 +3,8 @@ from flask import Flask, request, send_file, jsonify
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from io import BytesIO
 import requests
 import logging
@@ -51,34 +53,60 @@ def add_header_logo(header):
     
     return header_para
 
-def add_footer_logo(footer_para):
+def add_footer_table(footer):
+    """Create footer with logo and text aligned horizontally"""
+    table = footer.add_table(rows=1, cols=2)
+    table.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    
+    # Remove all table borders
+    for row in table.rows:
+        for cell in row.cells:
+            tc = cell._element
+            tcPr = tc.get_or_add_tcPr()
+            tcBorders = OxmlElement('w:tcBorders')
+            for border_name in ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']:
+                border = OxmlElement(f'w:{border_name}')
+                border.set(qn('w:val'), 'none')
+                tcBorders.append(border)
+            tcPr.append(tcBorders)
+    
+    # Left cell: Logo
+    logo_cell = table.rows[0].cells[0]
+    logo_cell.width = Inches(1.5)
+    logo_cell.vertical_alignment = 1  # Center vertically
+    
+    logo_para = logo_cell.paragraphs[0]
+    logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    logo_para.paragraph_format.space_after = Pt(0)
+    logo_para.paragraph_format.space_before = Pt(0)
+    
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
-            run = footer_para.add_run()
+            run = logo_para.add_run()
             run.add_picture(logo_stream, height=Inches(0.25))
             logger.info("✅ Footer logo added")
-            return True
         except Exception as e:
-            logger.error(f"Error: {e}")
-            return False
-    return False
-
-def add_footer_text_first_line(footer):
-    address_para = footer.add_paragraph()
-    address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    address_para.paragraph_format.space_before = Pt(0)
-    address_para.paragraph_format.space_after = Pt(0)
+            logger.error(f"Footer logo error: {e}")
     
-    run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
+    # Right cell: Text content
+    text_cell = table.rows[0].cells[1]
+    text_cell.width = Inches(5)
+    text_cell.vertical_alignment = 1  # Center vertically
+    
+    # First line: Address
+    addr_para = text_cell.paragraphs[0]
+    addr_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    addr_para.paragraph_format.space_before = Pt(0)
+    addr_para.paragraph_format.space_after = Pt(0)
+    
+    run1 = addr_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
     run1.font.size = Pt(7)
     run1.font.color.rgb = COLORS['gray100']
     
-    logger.info("✅ Footer address added")
-
-def add_footer_text_second_line(footer):
-    contact_para = footer.add_paragraph()
+    # Second line: Contact
+    contact_para = text_cell.add_paragraph()
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     contact_para.paragraph_format.space_before = Pt(0)
     contact_para.paragraph_format.space_after = Pt(0)
@@ -93,7 +121,7 @@ def add_footer_text_second_line(footer):
     run3.font.size = Pt(7)
     run3.font.color.rgb = COLORS['gray100']
     
-    logger.info("✅ Footer contact added")
+    logger.info("✅ Footer table created")
 
 def add_header_footer(doc):
     logger.info("Adding header and footer...")
@@ -106,13 +134,7 @@ def add_header_footer(doc):
     for para in footer.paragraphs:
         para.clear()
     
-    logo_para = footer.add_paragraph()
-    logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    logo_para.paragraph_format.space_after = Pt(2)
-    
-    add_footer_logo(logo_para)
-    add_footer_text_first_line(footer)
-    add_footer_text_second_line(footer)
+    add_footer_table(footer)
     
     logger.info("✅ Header and footer complete")
 
