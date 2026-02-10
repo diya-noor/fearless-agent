@@ -39,6 +39,7 @@ def add_header_footer(doc):
     
     header_para = header.add_paragraph()
     header_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    header_para.paragraph_format.space_after = Pt(24)  # More space after logo
     
     logo_stream = download_image(HEADER_LOGO_URL)
     if logo_stream:
@@ -54,43 +55,44 @@ def add_header_footer(doc):
     for para in footer.paragraphs:
         para.clear()
     
-    # Logo left
-    logo_para = footer.add_paragraph()
-    logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    # Create single paragraph with logo and text inline
+    footer_para = footer.add_paragraph()
+    footer_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
+    # Add logo
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
-            run = logo_para.add_run()
+            run = footer_para.add_run()
             run.add_picture(logo_stream, height=Inches(0.35))
-            logger.info("✅ Footer logo added (left)")
+            logger.info("✅ Footer logo added")
         except Exception as e:
             logger.error(f"Error: {e}")
     
-    # Address CENTERED
-    address_para = footer.add_paragraph()
-    address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    address_para.paragraph_format.space_before = Pt(6)
-    run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
+    # Add spacing after logo
+    footer_para.add_run("        ")
+    
+    # Add address - same line
+    run1 = footer_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
     run1.font.size = Pt(7)
     run1.font.color.rgb = RGBColor(153, 153, 153)
     
-    # Contact CENTERED
-    contact_para = footer.add_paragraph()
-    contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run2 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
+    # Line break within same paragraph
+    footer_para.add_run("\n        ")
+    
+    # Add contact - second line, indented to align with address
+    run2 = footer_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
     run2.font.size = Pt(7)
     run2.font.color.rgb = RGBColor(153, 153, 153)
     
-    run3 = contact_para.add_run("fearless.tech")
+    run3 = footer_para.add_run("fearless.tech")
     run3.font.name = 'Montserrat'
     run3.font.size = Pt(7)
     run3.font.color.rgb = RGBColor(92, 57, 119)
     
     logger.info("✅ Footer complete")
-
 def format_content(doc, text):
     text = text.strip()
     if '\n' not in text and '\\n' in text:
