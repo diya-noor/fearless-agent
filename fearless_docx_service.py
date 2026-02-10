@@ -45,7 +45,7 @@ def add_header_footer(doc):
     if logo_stream:
         try:
             run = header_para.add_run()
-            run.add_picture(logo_stream, height=Inches(0.42))  # ~30pt height
+            run.add_picture(logo_stream, height=Inches(0.42))
             logger.info("✅ Header logo added (left)")
         except Exception as e:
             logger.error(f"Error adding header logo: {e}")
@@ -55,45 +55,44 @@ def add_header_footer(doc):
     for para in footer.paragraphs:
         para.clear()
     
-    # Logo left
-    logo_para = footer.add_paragraph()
-    logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    logo_para.paragraph_format.space_after = Pt(0)
+    # Paragraph 1: Logo left, Address centered on SAME LINE
+    footer_para1 = footer.add_paragraph()
+    footer_para1.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    footer_para1.paragraph_format.space_after = Pt(0)
     
+    # Add logo
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
-            run = logo_para.add_run()
-            run.add_picture(logo_stream, height=Inches(0.42))  # ~30pt height
-            logger.info("✅ Footer logo added (left)")
+            run = footer_para1.add_run()
+            run.add_picture(logo_stream, height=Inches(0.42))
+            logger.info("✅ Footer logo added")
         except Exception as e:
             logger.error(f"Error: {e}")
     
-    # Address - CENTERED
-    address_para = footer.add_paragraph()
-    address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    address_para.paragraph_format.space_before = Pt(0)
-    address_para.paragraph_format.space_after = Pt(0)
+    # Add tabs and address on SAME LINE as logo
+    footer_para1.add_run("\t\t\t")
     
-    run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
+    run1 = footer_para1.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
     run1.font.size = Pt(7)
-    run1.font.color.rgb = RGBColor(73, 79, 86)  # gray100
+    run1.font.color.rgb = RGBColor(73, 79, 86)
     
-    # Contact - CENTERED
+    # Paragraph 2: Contact - CENTERED, indented to align with address
     contact_para = footer.add_paragraph()
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     contact_para.paragraph_format.space_before = Pt(0)
+    contact_para.paragraph_format.left_indent = Inches(0.5)
     
     run2 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
     run2.font.size = Pt(7)
-    run2.font.color.rgb = RGBColor(73, 79, 86)  # gray100
+    run2.font.color.rgb = RGBColor(73, 79, 86)
     
     run3 = contact_para.add_run("fearless.tech")
     run3.font.name = 'Montserrat'
     run3.font.size = Pt(7)
-    run3.font.color.rgb = RGBColor(73, 79, 86)  # gray100
+    run3.font.color.rgb = RGBColor(73, 79, 86)
     
     logger.info("✅ Footer complete")
 
@@ -165,7 +164,7 @@ def process_paragraph(doc, para_text):
         para.alignment = WD_ALIGN_PARAGRAPH.LEFT
         para.paragraph_format.space_before = Pt(0)
         para.paragraph_format.space_after = Pt(16)
-        para.paragraph_format.line_spacing = 1.5  # Line height 1.5
+        para.paragraph_format.line_spacing = 1.5
         
         run = para.add_run(para_text)
         run.font.name = 'Montserrat'
