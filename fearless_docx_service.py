@@ -60,7 +60,7 @@ def add_footer_logo(footer_para):
     if logo_stream:
         try:
             run = footer_para.add_run()
-            run.add_picture(logo_stream, height=Inches(0.3))  # Even smaller
+            run.add_picture(logo_stream, height=Inches(0.25))  # Very small - pulls text up
             logger.info("✅ Footer logo added")
             return True
         except Exception as e:
