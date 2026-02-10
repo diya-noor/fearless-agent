@@ -59,41 +59,74 @@ def add_header_footer(doc):
     header_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
     # === FOOTER (LOGO LEFT, TEXT RIGHT) ===
+    def add_header_footer(doc):
+    """Add Fearless header and footer"""
+    logger.info("Adding header and footer...")
+    section = doc.sections[0]
+    
+    # === HEADER (FORCE LEFT) ===
+    header = section.header
+    
+    # Clear any existing content
+    for para in header.paragraphs:
+        para.clear()
+    
+    # Create new paragraph
+    header_para = header.add_paragraph()
+    
+    # Add logo to a run
+    logo_stream = download_image(HEADER_LOGO_URL)
+    if logo_stream:
+        try:
+            run = header_para.add_run()
+            run.add_picture(logo_stream, height=Inches(0.6))
+            logger.info("✅ Header logo added (left-aligned)")
+        except Exception as e:
+            logger.error(f"Error adding header logo: {e}")
+    
+    # Explicitly set paragraph alignment
+    header_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    
+    # === FOOTER ===
     footer = section.footer
     
     # Clear existing
     for para in footer.paragraphs:
         para.clear()
     
-    # Create a paragraph with logo on left side
-    footer_para = footer.add_paragraph()
-    footer_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    # ROW 1: Logo on left
+    logo_para = footer.add_paragraph()
+    logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
-    # Add logo inline on the left
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
-            run = footer_para.add_run()
+            run = logo_para.add_run()
             run.add_picture(logo_stream, height=Inches(0.35))
             logger.info("✅ Footer logo added (left side)")
         except Exception as e:
             logger.error(f"Error adding footer logo: {e}")
     
-    # Add space after logo
-    footer_para.add_run("    ")
+    # ROW 2: Address - CENTERED
+    address_para = footer.add_paragraph()
+    address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    address_para.paragraph_format.space_before = Pt(6)
     
-    # Add address and contact info on same line
-    run1 = footer_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202  |  ")
+    run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
     run1.font.size = Pt(7)
     run1.font.color.rgb = RGBColor(153, 153, 153)  # Gray
     
-    run2 = footer_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
+    # ROW 3: Contact - CENTERED
+    contact_para = footer.add_paragraph()
+    contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    run2 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
     run2.font.size = Pt(7)
     run2.font.color.rgb = RGBColor(153, 153, 153)  # Gray
     
-    run3 = footer_para.add_run("fearless.tech")
+    run3 = contact_para.add_run("fearless.tech")
     run3.font.name = 'Montserrat'
     run3.font.size = Pt(7)
     run3.font.color.rgb = RGBColor(92, 57, 119)  # Purple
