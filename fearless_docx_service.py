@@ -77,8 +77,7 @@ def add_footer_text_first_line(footer):
     address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     address_para.paragraph_format.space_before = Pt(0)  # NO space before
     address_para.paragraph_format.space_after = Pt(0)   # NO space after
-    address_para.paragraph_format.line_spacing = 0.5    # BAHUT TIGHT - text upar aayega
-    
+        
     run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
     run1.font.size = Pt(7)
@@ -92,7 +91,7 @@ def add_footer_text_second_line(footer):
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     contact_para.paragraph_format.space_before = Pt(0)  # NO space
     contact_para.paragraph_format.space_after = Pt(0)   # NO space
-    contact_para.paragraph_format.line_spacing = 0.5    # BAHUT TIGHT
+    
     
     run2 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
