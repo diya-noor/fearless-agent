@@ -1,4 +1,4 @@
-# Fearless Document Formatter - FINAL COMPLETE VERSION
+# Fearless Document Formatter - ULTRA TIGHT SPACING VERSION
 from flask import Flask, request, send_file, jsonify
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
@@ -101,7 +101,6 @@ def format_content(doc, text):
 def process_paragraph(doc, para_text):
     para = doc.add_paragraph()
     
-    # More lenient heading detection - allow #Title or # Title
     if para_text.startswith('#'):
         level = 0
         idx = 0
@@ -112,7 +111,6 @@ def process_paragraph(doc, para_text):
         heading_text = para_text[level:].strip()
         
         if not heading_text:
-            # Empty heading - treat as body
             run = para.add_run(para_text)
             run.font.name = 'Montserrat'
             run.font.size = Pt(10)
@@ -123,10 +121,10 @@ def process_paragraph(doc, para_text):
         run = para.add_run(heading_text)
         
         if level == 1:
-            # # = TITLE: Orange, LEFT, 28pt, VERY MINIMAL space after
+            # # = TITLE: Orange, LEFT, 28pt, NO space after
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(32)
-            para.paragraph_format.space_after = Pt(2)  # VERY MINIMAL space to subtitle
+            para.paragraph_format.space_after = Pt(0)  # NO space - subtitle touches
             run.font.name = 'Montserrat Alternates'
             run.font.size = Pt(28)
             run.font.bold = True
@@ -134,9 +132,9 @@ def process_paragraph(doc, para_text):
             logger.info(f"✅ TITLE (Orange, Left): {heading_text}")
             
         elif level == 2:
-            # ## = SUBTITLE: Light Gray, Left, 22pt
+            # ## = SUBTITLE: Light Gray, Left, 22pt, NO space before
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            para.paragraph_format.space_before = Pt(26)
+            para.paragraph_format.space_before = Pt(0)  # NO space - touches title
             para.paragraph_format.space_after = Pt(20)
             run.font.name = 'Montserrat Alternates'
             run.font.size = Pt(22)
@@ -177,11 +175,11 @@ def process_paragraph(doc, para_text):
             run.font.color.rgb = COLORS['purple']  # #5C3977 Purple
             logger.info(f"✅ HEADING 3 (Purple, Left): {heading_text}")
     else:
-        # Body text: Dark Gray, 10pt, Line height 1.5
+        # Body text: Dark Gray, 10pt, Tight line spacing
         para.alignment = WD_ALIGN_PARAGRAPH.LEFT
         para.paragraph_format.space_before = Pt(0)
         para.paragraph_format.space_after = Pt(16)
-        para.paragraph_format.line_spacing = 1.5
+        para.paragraph_format.line_spacing = 1.15  # Tighter - closer lines
         
         run = para.add_run(para_text)
         run.font.name = 'Montserrat'
