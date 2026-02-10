@@ -241,7 +241,7 @@ def generate_document():
         logger.error(f"❌ Error: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/health', methods={'GET'])
+@app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'healthy'}), 200
 
