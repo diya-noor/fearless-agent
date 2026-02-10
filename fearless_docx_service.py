@@ -1,4 +1,4 @@
-# Fearless Document Formatter - Final Version
+# Fearless Document Formatter - Footer text closer
 from flask import Flask, request, send_file, jsonify
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
@@ -55,35 +55,38 @@ def add_header_footer(doc):
     for para in footer.paragraphs:
         para.clear()
     
-    # Paragraph 1: Logo on LEFT
+    # Paragraph 1: Logo on LEFT (smaller height to allow text to move up visually)
     logo_para = footer.add_paragraph()
     logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    logo_para.paragraph_format.space_after = Pt(0)  # No space - text closer to logo
+    logo_para.paragraph_format.space_after = Pt(0)
+    logo_para.paragraph_format.line_spacing = 1.0  # Tight line spacing
     
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
             run = logo_para.add_run()
-            run.add_picture(logo_stream, height=Inches(0.35))
+            run.add_picture(logo_stream, height=Inches(0.3))  # Reduced from 0.35 to 0.3
             logger.info("✅ Footer logo added (left)")
         except Exception as e:
             logger.error(f"Error: {e}")
     
-    # Paragraph 2: Address - CENTERED
+    # Paragraph 2: Address - CENTERED (tight spacing)
     address_para = footer.add_paragraph()
     address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     address_para.paragraph_format.space_before = Pt(0)
     address_para.paragraph_format.space_after = Pt(0)
+    address_para.paragraph_format.line_spacing = 1.0
     
     run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
     run1.font.size = Pt(7)
     run1.font.color.rgb = RGBColor(153, 153, 153)
     
-    # Paragraph 3: Contact - CENTERED
+    # Paragraph 3: Contact - CENTERED (tight spacing)
     contact_para = footer.add_paragraph()
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     contact_para.paragraph_format.space_before = Pt(0)
+    contact_para.paragraph_format.line_spacing = 1.0
     
     run2 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
