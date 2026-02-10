@@ -60,12 +60,12 @@ def add_header_footer(doc):
     footer_para1.alignment = WD_ALIGN_PARAGRAPH.LEFT
     footer_para1.paragraph_format.space_after = Pt(0)
     
-    # Add logo
+    # Add logo (smaller to pull text up)
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
             run = footer_para1.add_run()
-            run.add_picture(logo_stream, height=Inches(0.42))
+            run.add_picture(logo_stream, height=Inches(0.38))  # Smaller
             logger.info("✅ Footer logo added")
         except Exception as e:
             logger.error(f"Error: {e}")
@@ -78,11 +78,11 @@ def add_header_footer(doc):
     run1.font.size = Pt(7)
     run1.font.color.rgb = RGBColor(73, 79, 86)
     
-    # Paragraph 2: Contact - CENTERED, indented to align with address
+    # Paragraph 2: Contact - FULLY CENTERED (no indent)
     contact_para = footer.add_paragraph()
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     contact_para.paragraph_format.space_before = Pt(0)
-    contact_para.paragraph_format.left_indent = Inches(0.5)
+    contact_para.paragraph_format.left_indent = Inches(0)  # No indent - fully centered
     
     run2 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
@@ -133,8 +133,8 @@ def process_paragraph(doc, para_text):
         heading_text = para_text[level:].strip()
         run = para.add_run(heading_text)
         
-        if level == 1:  # H1
-            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        if level == 1:  # H1 - LEFT ALIGNED
+            para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(32)
             para.paragraph_format.space_after = Pt(24)
             run.font.name = 'Montserrat Alternates'
