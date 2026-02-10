@@ -35,7 +35,7 @@ def download_image(url):
     return None
 
 def add_header_logo(header):
-    """Add header logo on left - 30pt width as per style guide"""
+    """Add header logo on left"""
     for para in header.paragraphs:
         para.clear()
     
@@ -47,7 +47,7 @@ def add_header_logo(header):
     if logo_stream:
         try:
             run = header_para.add_run()
-            run.add_picture(logo_stream, width=Inches(0.42))  # 30pt ≈ 0.42 inches
+            run.add_picture(logo_stream, height=Inches(0.6))  # Previous size
             logger.info("✅ Header logo added (left)")
         except Exception as e:
             logger.error(f"Error adding header logo: {e}")
@@ -55,12 +55,12 @@ def add_header_logo(header):
     return header_para
 
 def add_footer_logo(footer_para):
-    """Add footer logo on left - 30pt width as per style guide"""
+    """Add footer logo on left - bigger size"""
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
             run = footer_para.add_run()
-            run.add_picture(logo_stream, width=Inches(0.42))  # 30pt ≈ 0.42 inches
+            run.add_picture(logo_stream, height=Inches(0.45))  # Bigger
             logger.info("✅ Footer logo added")
             return True
         except Exception as e:
@@ -68,13 +68,14 @@ def add_footer_logo(footer_para):
             return False
     return False
 
-def add_footer_text_first_line(footer_para):
-    """Add footer address on same line as logo"""
-    # Add spacing after logo
-    footer_para.add_run("        ")
+def add_footer_text_first_line(footer):
+    """Add footer address centered on separate line"""
+    address_para = footer.add_paragraph()
+    address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    address_para.paragraph_format.space_before = Pt(0)
+    address_para.paragraph_format.space_after = Pt(0)
     
-    # Add address
-    run1 = footer_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
+    run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
     run1.font.size = Pt(7)
     run1.font.color.rgb = COLORS['gray100']
@@ -114,15 +115,16 @@ def add_header_footer(doc):
     for para in footer.paragraphs:
         para.clear()
     
-    # Create first paragraph for logo and first line of text
-    footer_para = footer.add_paragraph()
-    footer_para.paragraph_format.space_after = Pt(0)
+    # Logo paragraph (left)
+    logo_para = footer.add_paragraph()
+    logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    logo_para.paragraph_format.space_after = Pt(0)
+    add_footer_logo(logo_para)
     
-    # Add logo and first text line on SAME ROW
-    add_footer_logo(footer_para)
-    add_footer_text_first_line(footer_para)
+    # First text line centered (separate paragraph)
+    add_footer_text_first_line(footer)
     
-    # Add second text line centered below
+    # Second text line centered below
     add_footer_text_second_line(footer)
     
     logger.info("✅ Header and footer complete")
