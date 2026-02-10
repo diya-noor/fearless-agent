@@ -51,6 +51,7 @@ def add_header_footer(doc):
             logger.error(f"Error adding header logo: {e}")
     
     # === FOOTER ===
+    # === FOOTER ===
     footer = section.footer
     for para in footer.paragraphs:
         para.clear()
@@ -69,10 +70,10 @@ def add_header_footer(doc):
         except Exception as e:
             logger.error(f"Error: {e}")
     
-    # Row 2: Address - CENTERED
+    # Row 2: Address - CENTERED, pulled UP to align with logo
     address_para = footer.add_paragraph()
     address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    address_para.paragraph_format.space_before = Pt(0)
+    address_para.paragraph_format.space_before = Pt(-25)  # Negative spacing pulls it up
     address_para.paragraph_format.space_after = Pt(0)
     
     run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
@@ -96,7 +97,6 @@ def add_header_footer(doc):
     run3.font.color.rgb = RGBColor(92, 57, 119)
     
     logger.info("✅ Footer complete")
-
 def format_content(doc, text):
     """Format content"""
     text = text.strip()
