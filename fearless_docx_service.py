@@ -142,7 +142,7 @@ def process_paragraph(doc, para_text):
         
         if level == 1:
             # H1 - Main Title: Orange, 28pt, Centered, Bold
-            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(16)
             para.paragraph_format.space_after = Pt(24)
             run.font.name = 'Montserrat Alternates'
