@@ -35,17 +35,28 @@ def add_header_footer(doc):
     section = doc.sections[0]
     
     # === HEADER (LEFT-ALIGNED) ===
+    # === HEADER (FORCE LEFT) ===
     header = section.header
-    header_para = header.paragraphs[0]
-    header_para.alignment = WD_ALIGN_PARAGRAPH.LEFT  # Changed to LEFT
     
+    # Clear any existing content
+    for para in header.paragraphs:
+        para.clear()
+    
+    # Create new paragraph
+    header_para = header.add_paragraph()
+    
+    # Add logo to a run
     logo_stream = download_image(HEADER_LOGO_URL)
     if logo_stream:
         try:
-            header_para.add_run().add_picture(logo_stream, height=Inches(0.6))
+            run = header_para.add_run()
+            run.add_picture(logo_stream, height=Inches(0.6))
             logger.info("✅ Header logo added (left-aligned)")
         except Exception as e:
             logger.error(f"Error adding header logo: {e}")
+    
+    # Explicitly set paragraph alignment
+    header_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
     # === FOOTER (LOGO LEFT, TEXT RIGHT) ===
     footer = section.footer
