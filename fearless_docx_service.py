@@ -1,4 +1,4 @@
-# Fearless Document Formatter - Footer text closer
+# Fearless Document Formatter - Official Style Guide
 from flask import Flask, request, send_file, jsonify
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
@@ -39,13 +39,13 @@ def add_header_footer(doc):
     
     header_para = header.add_paragraph()
     header_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    header_para.paragraph_format.space_after = Pt(24)
+    header_para.paragraph_format.space_after = Pt(0)
     
     logo_stream = download_image(HEADER_LOGO_URL)
     if logo_stream:
         try:
             run = header_para.add_run()
-            run.add_picture(logo_stream, height=Inches(0.6))
+            run.add_picture(logo_stream, height=Inches(0.42))  # ~30pt height
             logger.info("✅ Header logo added (left)")
         except Exception as e:
             logger.error(f"Error adding header logo: {e}")
@@ -55,48 +55,45 @@ def add_header_footer(doc):
     for para in footer.paragraphs:
         para.clear()
     
-    # Paragraph 1: Logo on LEFT (smaller height to allow text to move up visually)
+    # Logo left
     logo_para = footer.add_paragraph()
     logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     logo_para.paragraph_format.space_after = Pt(0)
-    logo_para.paragraph_format.line_spacing = 1.0  # Tight line spacing
     
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
             run = logo_para.add_run()
-            run.add_picture(logo_stream, height=Inches(0.3))  # Reduced from 0.35 to 0.3
+            run.add_picture(logo_stream, height=Inches(0.42))  # ~30pt height
             logger.info("✅ Footer logo added (left)")
         except Exception as e:
             logger.error(f"Error: {e}")
     
-    # Paragraph 2: Address - CENTERED (tight spacing)
+    # Address - CENTERED
     address_para = footer.add_paragraph()
     address_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     address_para.paragraph_format.space_before = Pt(0)
     address_para.paragraph_format.space_after = Pt(0)
-    address_para.paragraph_format.line_spacing = 1.0
     
     run1 = address_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
     run1.font.name = 'Montserrat'
     run1.font.size = Pt(7)
-    run1.font.color.rgb = RGBColor(153, 153, 153)
+    run1.font.color.rgb = RGBColor(73, 79, 86)  # gray100
     
-    # Paragraph 3: Contact - CENTERED (tight spacing)
+    # Contact - CENTERED
     contact_para = footer.add_paragraph()
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     contact_para.paragraph_format.space_before = Pt(0)
-    contact_para.paragraph_format.line_spacing = 1.0
     
     run2 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
     run2.font.size = Pt(7)
-    run2.font.color.rgb = RGBColor(153, 153, 153)
+    run2.font.color.rgb = RGBColor(73, 79, 86)  # gray100
     
     run3 = contact_para.add_run("fearless.tech")
     run3.font.name = 'Montserrat'
     run3.font.size = Pt(7)
-    run3.font.color.rgb = RGBColor(92, 57, 119)
+    run3.font.color.rgb = RGBColor(73, 79, 86)  # gray100
     
     logger.info("✅ Footer complete")
 
@@ -123,9 +120,8 @@ def format_content(doc, text):
         process_paragraph(doc, '\n'.join(current_para_lines))
 
 def process_paragraph(doc, para_text):
-    """Process paragraph"""
+    """Process paragraph with Fearless style guide"""
     para = doc.add_paragraph()
-    para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
     if para_text.startswith('#'):
         level = 0
@@ -138,28 +134,43 @@ def process_paragraph(doc, para_text):
         heading_text = para_text[level:].strip()
         run = para.add_run(heading_text)
         
-        if level == 1:  # H1 - Orange-red
+        if level == 1:  # H1
+            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            para.paragraph_format.space_before = Pt(32)
+            para.paragraph_format.space_after = Pt(24)
             run.font.name = 'Montserrat Alternates'
-            run.font.size = Pt(16)
+            run.font.size = Pt(28)
             run.font.bold = True
-            run.font.color.rgb = RGBColor(238, 83, 64)  # #ee5340
-        elif level == 2:  # H2 - Orange-red
+            run.font.color.rgb = RGBColor(238, 83, 64)  # #EE5340 Orange
+            
+        elif level == 2:  # H2
+            para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            para.paragraph_format.space_before = Pt(26)
+            para.paragraph_format.space_after = Pt(20)
+            run.font.name = 'Montserrat Alternates'
+            run.font.size = Pt(22)
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(92, 57, 119)  # #5C3977 Purple
+            
+        else:  # H3+
+            para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            para.paragraph_format.space_before = Pt(20)
+            para.paragraph_format.space_after = Pt(16)
             run.font.name = 'Montserrat'
-            run.font.size = Pt(14)
+            run.font.size = Pt(18)
             run.font.bold = True
-            run.font.color.rgb = RGBColor(238, 83, 64)  # #ee5340
-        else:  # H3+ - Purple
-            run.font.name = 'Montserrat'
-            run.font.size = Pt(12)
-            run.font.bold = True
-            run.font.color.rgb = RGBColor(92, 57, 119)  # #5c3977
+            run.font.color.rgb = RGBColor(73, 79, 86)  # #494F56 Gray100
     else:
+        # Body text
+        para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        para.paragraph_format.space_before = Pt(0)
+        para.paragraph_format.space_after = Pt(16)
+        para.paragraph_format.line_spacing = 1.5  # Line height 1.5
+        
         run = para.add_run(para_text)
         run.font.name = 'Montserrat'
         run.font.size = Pt(10)
-        run.font.color.rgb = RGBColor(102, 102, 102)  # #666666
-
-    para.paragraph_format.space_after = Pt(12)
+        run.font.color.rgb = RGBColor(73, 79, 86)  # #494F56 Gray100
 
 @app.route('/generate-document', methods=['POST'])
 def generate_document():
@@ -173,6 +184,7 @@ def generate_document():
         
         doc = Document()
         
+        # Margins: 72pt = 1 inch
         for section in doc.sections:
             section.top_margin = Inches(1)
             section.bottom_margin = Inches(1)
