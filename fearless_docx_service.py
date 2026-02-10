@@ -1,4 +1,4 @@
-# Fearless Document Formatter - FIXED VERSION
+# Fearless Document Formatter - Exact Palette Colors
 from flask import Flask, request, send_file, jsonify
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
@@ -16,9 +16,10 @@ HEADER_LOGO_URL = "https://raw.githubusercontent.com/diya-noor/fearless-agent/ma
 FOOTER_LOGO_URL = "https://raw.githubusercontent.com/diya-noor/fearless-agent/main/fearless_text_logo.png"
 
 COLORS = {
-    'orange': RGBColor(238, 83, 64),
-    'purple': RGBColor(92, 57, 119),
-    'gray100': RGBColor(73, 79, 86),
+    'orange': RGBColor(238, 83, 64),      # #EE5340 - Title, Heading 1
+    'purple': RGBColor(92, 57, 119),      # #5C3977 - Heading 2, Heading 3
+    'gray100': RGBColor(73, 79, 86),      # #494F56 - Dark gray (body text)
+    'gray70': RGBColor(127, 131, 136),    # #7F8388 - Light gray (subtitle)
 }
 
 def download_image(url):
@@ -98,23 +99,16 @@ def format_content(doc, text):
 def process_paragraph(doc, para_text):
     para = doc.add_paragraph()
     
-    # CRITICAL FIX: Check if line starts with # followed by space or end
     if para_text.startswith('#') and (len(para_text) == 1 or para_text[1] in [' ', '#']):
-        # Count heading level - FIXED LOGIC
         level = 0
         idx = 0
         while idx < len(para_text) and para_text[idx] == '#':
             level += 1
             idx += 1
         
-        # Extract heading text - remove all # and leading spaces
         heading_text = para_text[level:].strip()
         
-        logger.info(f"🔍 Detected H{level}: '{heading_text}' from '{para_text}'")
-        
         if not heading_text:
-            # If no text after #, treat as body
-            logger.warning(f"⚠️ Empty heading, treating as body: '{para_text}'")
             run = para.add_run(para_text)
             run.font.name = 'Montserrat'
             run.font.size = Pt(10)
@@ -125,61 +119,61 @@ def process_paragraph(doc, para_text):
         run = para.add_run(heading_text)
         
         if level == 1:
-            # H1: Orange, 28pt, LEFT
+            # # = TITLE: Orange, LEFT, 28pt
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            para.paragraph_format.space_before = Pt(16)
+            para.paragraph_format.space_before = Pt(32)
             para.paragraph_format.space_after = Pt(24)
             run.font.name = 'Montserrat Alternates'
             run.font.size = Pt(28)
             run.font.bold = True
-            run.font.color.rgb = COLORS['orange']
-            logger.info(f"✅ H1 formatted: {heading_text}")
+            run.font.color.rgb = COLORS['orange']  # #EE5340
+            logger.info(f"✅ TITLE (Orange, Left): {heading_text}")
             
         elif level == 2:
-            # H2: Purple, 22pt, LEFT
+            # ## = SUBTITLE: Light Gray, Left, 22pt
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(26)
             para.paragraph_format.space_after = Pt(20)
             run.font.name = 'Montserrat Alternates'
             run.font.size = Pt(22)
             run.font.bold = True
-            run.font.color.rgb = COLORS['purple']
-            logger.info(f"✅ H2 formatted: {heading_text}")
+            run.font.color.rgb = COLORS['gray70']  # #7F8388 Light Gray
+            logger.info(f"✅ SUBTITLE (Light Gray, Left): {heading_text}")
             
         elif level == 3:
-            # H3: Gray, 18pt, LEFT
+            # ### = HEADING 1: Orange, Left, 18pt
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(20)
             para.paragraph_format.space_after = Pt(16)
             run.font.name = 'Montserrat'
             run.font.size = Pt(18)
             run.font.bold = True
-            run.font.color.rgb = COLORS['gray100']
-            logger.info(f"✅ H3 formatted: {heading_text}")
+            run.font.color.rgb = COLORS['orange']  # #EE5340
+            logger.info(f"✅ HEADING 1 (Orange, Left): {heading_text}")
             
         elif level == 4:
-            # H4: Gray, 14pt, LEFT
+            # #### = HEADING 2: Purple, Left, 14pt
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(16)
             para.paragraph_format.space_after = Pt(12)
             run.font.name = 'Montserrat'
             run.font.size = Pt(14)
             run.font.bold = True
-            run.font.color.rgb = COLORS['gray100']
-            logger.info(f"✅ H4 formatted: {heading_text}")
+            run.font.color.rgb = COLORS['purple']  # #5C3977
+            logger.info(f"✅ HEADING 2 (Purple, Left): {heading_text}")
             
         else:
-            # H5+: Gray, 12pt, LEFT
+            # ##### = HEADING 3: Purple, Left, 12pt
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(12)
             para.paragraph_format.space_after = Pt(10)
             run.font.name = 'Montserrat'
             run.font.size = Pt(12)
             run.font.bold = True
-            run.font.color.rgb = COLORS['gray100']
-            logger.info(f"✅ H{level} formatted: {heading_text}")
+            run.font.color.rgb = COLORS['purple']  # #5C3977
+            logger.info(f"✅ HEADING 3 (Purple, Left): {heading_text}")
     else:
-        # Body text - NOT a heading
+        # Body text: Dark Gray, 10pt
         para.alignment = WD_ALIGN_PARAGRAPH.LEFT
         para.paragraph_format.space_before = Pt(0)
         para.paragraph_format.space_after = Pt(16)
@@ -188,7 +182,7 @@ def process_paragraph(doc, para_text):
         run = para.add_run(para_text)
         run.font.name = 'Montserrat'
         run.font.size = Pt(10)
-        run.font.color.rgb = COLORS['gray100']
+        run.font.color.rgb = COLORS['gray100']  # #494F56 Dark Gray
         logger.info(f"📝 Body text: {para_text[:50]}...")
 
 @app.route('/generate-document', methods=['POST'])
@@ -200,8 +194,6 @@ def generate_document():
         
         if not text:
             return jsonify({'error': 'No text provided'}), 400
-        
-        logger.info(f"Input text preview: {text[:200]}...")
         
         doc = Document()
         
@@ -219,7 +211,7 @@ def generate_document():
         doc.save(file_stream)
         file_stream.seek(0)
         
-        logger.info("✅ Document generated successfully")
+        logger.info("✅ Document generated")
         
         return send_file(
             file_stream,
@@ -229,8 +221,6 @@ def generate_document():
         )
     except Exception as e:
         logger.error(f"❌ Error: {e}")
-        import traceback
-        logger.error(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 @app.route('/health', methods=['GET'])
