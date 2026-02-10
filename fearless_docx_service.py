@@ -55,10 +55,10 @@ def add_header_footer(doc):
     for para in footer.paragraphs:
         para.clear()
     
-    # Paragraph 1: Logo on LEFT (same as header position)
+    # Paragraph 1: Logo on LEFT
     logo_para = footer.add_paragraph()
     logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    logo_para.paragraph_format.space_after = Pt(6)
+    logo_para.paragraph_format.space_after = Pt(0)  # No space - text closer to logo
     
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
