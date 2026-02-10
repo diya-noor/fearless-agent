@@ -1,4 +1,4 @@
-# Fearless Document Formatter - FINAL WORKING VERSION
+# Fearless Document Formatter - FIXED VERSION
 from flask import Flask, request, send_file, jsonify
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
@@ -33,7 +33,6 @@ def download_image(url):
 def add_header_footer(doc):
     section = doc.sections[0]
     
-    # HEADER
     header = section.header
     for para in header.paragraphs:
         para.clear()
@@ -45,14 +44,11 @@ def add_header_footer(doc):
     logo_stream = download_image(HEADER_LOGO_URL)
     if logo_stream:
         header_para.add_run().add_picture(logo_stream, height=Inches(0.5))
-        logger.info("✅ Header logo added")
     
-    # FOOTER
     footer = section.footer
     for para in footer.paragraphs:
         para.clear()
     
-    # Logo
     logo_para = footer.add_paragraph()
     logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     logo_para.paragraph_format.space_after = Pt(1)
@@ -60,9 +56,7 @@ def add_header_footer(doc):
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         logo_para.add_run().add_picture(logo_stream, height=Inches(0.2))
-        logger.info("✅ Footer logo added")
     
-    # Address
     addr_para = footer.add_paragraph()
     addr_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     addr_para.paragraph_format.space_before = Pt(0)
@@ -73,7 +67,6 @@ def add_header_footer(doc):
     run1.font.size = Pt(7)
     run1.font.color.rgb = COLORS['gray100']
     
-    # Contact
     contact_para = footer.add_paragraph()
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     contact_para.paragraph_format.space_before = Pt(0)
@@ -87,8 +80,6 @@ def add_header_footer(doc):
     run3.font.name = 'Montserrat'
     run3.font.size = Pt(7)
     run3.font.color.rgb = COLORS['gray100']
-    
-    logger.info("✅ Header and footer complete")
 
 def format_content(doc, text):
     text = text.strip()
@@ -97,39 +88,44 @@ def format_content(doc, text):
     text = text.replace('\r\n', '\n').replace('\r', '\n')
     
     lines = text.split('\n')
-    current_para_lines = []
     
     for line in lines:
         line = line.strip()
         if not line:
-            if current_para_lines:
-                process_paragraph(doc, '\n'.join(current_para_lines))
-                current_para_lines = []
             continue
-        current_para_lines.append(line)
-    
-    if current_para_lines:
-        process_paragraph(doc, '\n'.join(current_para_lines))
+        process_paragraph(doc, line)
 
 def process_paragraph(doc, para_text):
     para = doc.add_paragraph()
     
-    # Check if it's a heading
-    if para_text.startswith('#'):
-        # Count heading level
+    # CRITICAL FIX: Check if line starts with # followed by space or end
+    if para_text.startswith('#') and (len(para_text) == 1 or para_text[1] in [' ', '#']):
+        # Count heading level - FIXED LOGIC
         level = 0
-        for char in para_text:
-            if char == '#':
-                level += 1
-            else:
-                break
+        idx = 0
+        while idx < len(para_text) and para_text[idx] == '#':
+            level += 1
+            idx += 1
         
-        # Extract heading text (remove # symbols)
+        # Extract heading text - remove all # and leading spaces
         heading_text = para_text[level:].strip()
+        
+        logger.info(f"🔍 Detected H{level}: '{heading_text}' from '{para_text}'")
+        
+        if not heading_text:
+            # If no text after #, treat as body
+            logger.warning(f"⚠️ Empty heading, treating as body: '{para_text}'")
+            run = para.add_run(para_text)
+            run.font.name = 'Montserrat'
+            run.font.size = Pt(10)
+            run.font.color.rgb = COLORS['gray100']
+            para.paragraph_format.space_after = Pt(16)
+            return
+        
         run = para.add_run(heading_text)
         
         if level == 1:
-            # H1: Orange, 28pt, LEFT, Bold
+            # H1: Orange, 28pt, LEFT
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(16)
             para.paragraph_format.space_after = Pt(24)
@@ -140,7 +136,7 @@ def process_paragraph(doc, para_text):
             logger.info(f"✅ H1 formatted: {heading_text}")
             
         elif level == 2:
-            # H2: Purple, 22pt, LEFT, Bold
+            # H2: Purple, 22pt, LEFT
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(26)
             para.paragraph_format.space_after = Pt(20)
@@ -151,7 +147,7 @@ def process_paragraph(doc, para_text):
             logger.info(f"✅ H2 formatted: {heading_text}")
             
         elif level == 3:
-            # H3: Gray, 18pt, LEFT, Bold
+            # H3: Gray, 18pt, LEFT
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(20)
             para.paragraph_format.space_after = Pt(16)
@@ -162,7 +158,7 @@ def process_paragraph(doc, para_text):
             logger.info(f"✅ H3 formatted: {heading_text}")
             
         elif level == 4:
-            # H4: Gray, 14pt, LEFT, Bold
+            # H4: Gray, 14pt, LEFT
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(16)
             para.paragraph_format.space_after = Pt(12)
@@ -173,7 +169,7 @@ def process_paragraph(doc, para_text):
             logger.info(f"✅ H4 formatted: {heading_text}")
             
         else:
-            # H5+: Gray, 12pt, LEFT, Bold
+            # H5+: Gray, 12pt, LEFT
             para.alignment = WD_ALIGN_PARAGRAPH.LEFT
             para.paragraph_format.space_before = Pt(12)
             para.paragraph_format.space_after = Pt(10)
@@ -183,7 +179,7 @@ def process_paragraph(doc, para_text):
             run.font.color.rgb = COLORS['gray100']
             logger.info(f"✅ H{level} formatted: {heading_text}")
     else:
-        # Body text
+        # Body text - NOT a heading
         para.alignment = WD_ALIGN_PARAGRAPH.LEFT
         para.paragraph_format.space_before = Pt(0)
         para.paragraph_format.space_after = Pt(16)
@@ -193,6 +189,7 @@ def process_paragraph(doc, para_text):
         run.font.name = 'Montserrat'
         run.font.size = Pt(10)
         run.font.color.rgb = COLORS['gray100']
+        logger.info(f"📝 Body text: {para_text[:50]}...")
 
 @app.route('/generate-document', methods=['POST'])
 def generate_document():
@@ -204,7 +201,7 @@ def generate_document():
         if not text:
             return jsonify({'error': 'No text provided'}), 400
         
-        logger.info(f"Input text: {text[:100]}...")
+        logger.info(f"Input text preview: {text[:200]}...")
         
         doc = Document()
         
@@ -232,6 +229,8 @@ def generate_document():
         )
     except Exception as e:
         logger.error(f"❌ Error: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 @app.route('/health', methods=['GET'])
