@@ -53,68 +53,50 @@ def add_header_footer(doc):
             logger.error(f"Error adding header logo: {e}")
     
     # === FOOTER (TABLE LAYOUT) ===
+    # === FOOTER (NO TABLE - USE PARAGRAPHS) ===
     footer = section.footer
     for para in footer.paragraphs:
         para.clear()
     
-    # Create 2-column table: logo left, text right
-    table = footer.add_table(rows=1, cols=2)
-    table.autofit = False
-    table.allow_autofit = False
-    
-    # Remove all borders
-    for row in table.rows:
-        for cell in row.cells:
-            cell_elem = cell._element
-            tc_pr = cell_elem.get_or_add_tcPr()
-            tc_borders = OxmlElement('w:tcBorders')
-            for border_name in ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']:
-                border = OxmlElement(f'w:{border_name}')
-                border.set(qn('w:val'), 'none')
-                tc_borders.append(border)
-            tc_pr.append(tc_borders)
-    
-    # Left cell: Logo
-    left_cell = table.rows[0].cells[0]
-    left_cell.width = Inches(1.5)
-    logo_para = left_cell.paragraphs[0]
+    # Paragraph 1: Logo only (left)
+    logo_para = footer.add_paragraph()
     logo_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    logo_para.paragraph_format.space_after = Pt(0)  # No space after logo
     
     logo_stream = download_image(FOOTER_LOGO_URL)
     if logo_stream:
         try:
             run = logo_para.add_run()
             run.add_picture(logo_stream, height=Inches(0.35))
+            # Position text to the right of logo using tabs
+            logo_para.add_run("\t\t")
+            
+            # Add address on same line after logo
+            run1 = logo_para.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
+            run1.font.name = 'Montserrat'
+            run1.font.size = Pt(7)
+            run1.font.color.rgb = RGBColor(153, 153, 153)
+            
             logger.info("✅ Footer logo added")
         except Exception as e:
             logger.error(f"Error: {e}")
     
-    # Right cell: Text (2 lines, centered)
-    right_cell = table.rows[0].cells[1]
+    # Paragraph 2: Contact (indented to align with address)
+    contact_para = footer.add_paragraph()
+    contact_para.paragraph_format.space_before = Pt(0)
+    contact_para.paragraph_format.left_indent = Inches(1.6)  # Indent to align with text above
     
-    # Line 1: Address
-    text_para1 = right_cell.paragraphs[0]
-    text_para1.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run1 = text_para1.add_run("8 Market Place, Suite 200, Baltimore, MD 21202")
-    run1.font.name = 'Montserrat'
-    run1.font.size = Pt(7)
-    run1.font.color.rgb = RGBColor(153, 153, 153)
-    
-    # Line 2: Contact
-    text_para2 = right_cell.add_paragraph()
-    text_para2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run2 = text_para2.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
+    run2 = contact_para.add_run("(410) 394-9600  /  fax (410) 779-3706  /  ")
     run2.font.name = 'Montserrat'
     run2.font.size = Pt(7)
     run2.font.color.rgb = RGBColor(153, 153, 153)
     
-    run3 = text_para2.add_run("fearless.tech")
+    run3 = contact_para.add_run("fearless.tech")
     run3.font.name = 'Montserrat'
     run3.font.size = Pt(7)
     run3.font.color.rgb = RGBColor(92, 57, 119)
     
     logger.info("✅ Footer complete")
-
 def format_content(doc, text):
     text = text.strip()
     if '\n' not in text and '\\n' in text:
