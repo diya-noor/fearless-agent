@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fearless Document Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #EE5340;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #EE5340;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #494F56;
+            font-size: 14px;
+        }
+
+        .formatting-guide {
+            background: #F3F3F4;
+            border-left: 4px solid #5C3977;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .formatting-guide h3 {
+            color: #5C3977;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .formatting-guide table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .formatting-guide td {
+            padding: 8px;
+            border-bottom: 1px solid #DADBDD;
+        }
+
+        .formatting-guide td:first-child {
+            font-family: 'Courier New', monospace;
+            background: #ECECED;
+            width: 40%;
+            font-size: 13px;
+            color: #5C3977;
+        }
+
+        .formatting-guide td:last-child {
+            color: #494F56;
+            font-size: 13px;
+        }
+
+        .text-area-container {
+            margin-bottom: 20px;
+        }
+
+        .text-area-container label {
+            display: block;
+            color: #494F56;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 2px solid #DADBDD;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #5C3977;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .generate-btn {
+            background: #EE5340;
+            color: white;
+        }
+
+        .generate-btn:hover {
+            background: #d64430;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(238, 83, 64, 0.4);
+        }
+
+        .generate-btn:disabled {
+            background: #C7C9CB;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .clear-btn {
+            background: #7F8388;
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background: #5B6066;
+            transform: translateY(-2px);
+        }
+
+        .status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #C4DCDE;
+            color: #008C95;
+            border: 2px solid #008C95;
+        }
+
+        .status-message.error {
+            background: #F5CEC8;
+            color: #EE5340;
+            border: 2px solid #EE5340;
+        }
+
+        .status-message.loading {
+            background: #CFD4E6;
+            color: #606EB2;
+            border: 2px solid #606EB2;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #606EB2;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #ECECED;
+            color: #7F8388;
+            font-size: 12px;
+        }
+
+        .example-link {
+            color: #5C3977;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .example-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Fearless Document Generator</h1>
+            <p>Create professionally formatted documents instantly</p>
+        </div>
+
+        <div class="formatting-guide">
+            <h3>📝 Formatting Guide</h3>
+            <table>
+                <tr>
+                    <td># Main Title</td>
+                    <td>Main title (Orange, 28pt, Centered)</td>
+                </tr>
+                <tr>
+                    <td>## Subtitle</td>
+                    <td>Subtitle (Purple, 22pt, Left)</td>
+                </tr>
+                <tr>
+                    <td>### Heading 3</td>
+                    <td>Heading 3 (Gray, 18pt, Left)</td>
+                </tr>
+                <tr>
+                    <td>#### Heading 4</td>
+                    <td>Heading 4 (Gray, 14pt, Left)</td>
+                </tr>
+                <tr>
+                    <td>Regular text</td>
+                    <td>Body text (Gray, 10pt, Line height 1.5)</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center; padding-top: 10px;">
+                        <a class="example-link" onclick="loadExample()">📄 Load Example Document</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="text-area-container">
+            <label for="textInput">Enter Your Document Text:</label>
+            <textarea id="textInput" placeholder="# My Document Title
+
+## Introduction
+
+Write your content here. Use the formatting guide above to structure your document.
+
+### Section 1
+
+Add your paragraphs and content naturally."></textarea>
+        </div>
+
+        <div class="button-container">
+            <button class="generate-btn" id="generateBtn" onclick="generateDocument()">
+                Generate Document
+            </button>
+            <button class="clear-btn" onclick="clearText()">
+                Clear
+            </button>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="footer">
+            <p>Powered by Fearless Technology | Document Formatter v1.0</p>
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = 'https://n8n-production-c3ee.up.railway.app/webhook/format-document';
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = `status-message ${type}`;
+            statusEl.style.display = 'block';
+        }
+
+        function hideStatus() {
+            document.getElementById('statusMessage').style.display = 'none';
+        }
+
+        async function generateDocument() {
+            const textInput = document.getElementById('textInput').value.trim();
+            const generateBtn = document.getElementById('generateBtn');
+
+            if (!textInput) {
+                showStatus('⚠️ Please enter some text first!', 'error');
+                return;
+            }
+
+            // Disable button and show loading
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="loader"></span> Generating...';
+            showStatus('⏳ Generating your document...', 'loading');
+
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: textInput })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                // Get the blob
+                const blob = await response.blob();
+                
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'fearless_document.docx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showStatus('✅ Document generated successfully! Check your downloads.', 'success');
+
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('❌ Error generating document. Please try again.', 'error');
+            } finally {
+                // Re-enable button
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = 'Generate Document';
+            }
+        }
+
+        function clearText() {
+            document.getElementById('textInput').value = '';
+            hideStatus();
+        }
+
+        function loadExample() {
+            const exampleText = `# Fearless Quarterly Business Report
+
+## Executive Summary
+
+Our Q4 2025 performance exceeded all expectations with record-breaking results across all key metrics. This document provides a comprehensive overview of our achievements and future outlook.
+
+### Financial Highlights
+
+Revenue increased 25% year-over-year with strong customer retention and market expansion. Our financial position remains robust with healthy cash flow and controlled operational expenses.
+
+#### Key Metrics
+
+- Total Revenue: $2.5M (↑25%)
+- Customer Satisfaction: 95% (↑8%)
+- Market Expansion: 3 new regions
+- Employee Growth: 40 new hires
+
+### Strategic Initiatives
+
+We launched several key initiatives that will drive growth in 2026:
+
+1. Product Innovation Program
+2. Customer Success Enhancement
+3. Market Expansion Strategy
+
+Our team remains committed to delivering exceptional value to our clients and stakeholders.`;
+
+            document.getElementById('textInput').value = exampleText;
+            hideStatus();
+            showStatus('📄 Example loaded! Click "Generate Document" to create.', 'success');
+        }
+
+        // Keyboard shortcut: Ctrl+Enter to generate
+        document.getElementById('textInput').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                generateDocument();
+            }
+        });
+    </script>
+</body>
+</html>
