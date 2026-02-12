@@ -1,0 +1,202 @@
+{
+  "name": "Fearless Document Formatter",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "format-document",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "711cf9d3-5920-4766-9089-24336911def9",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        32
+      ],
+      "webhookId": "2c3c5eb8-f254-484d-a0d3-31f340db970f"
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "text",
+              "stringValue": "={{ $json.body.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "41b1ddc7-c862-4f1e-b5cb-ea067cbd60d5",
+      "name": "Extract Text Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        -384,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fearless-agent-production.up.railway.app/generate-document",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        256,
+        -32
+      ],
+      "id": "b5247a69-88fc-4e86-a785-3b55b55d4871",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "responseDataSource": "set",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        464,
+        -48
+      ],
+      "id": "7293cd7a-fecd-48aa-9267-628b3b025791",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Add markdown formatting to this text. Use # for main title, ## for sections, ### for subsections, #### for minor headings. \n\nIMPORTANT:\n- Keep ALL original text exactly as written\n- Only add # symbols where needed\n- Do NOT add explanations\n- Output only the formatted text\n\nText to format:\n{{ $json.body.text }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -128,
+        0
+      ],
+      "id": "ce26028b-589f-4084-9223-d38fcbdac4fe",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        224
+      ],
+      "id": "62297421-a588-44af-9d98-84bb25c349a5",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "HKjysBysiQk1ibxX",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Text Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text Input": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9ab4265c-aae3-4863-9f23-bb4a1f2e577f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "19b49c229414c43d65451c15a7c84f8aec2c536cf741e64165b83b447e3cbe8d"
+  },
+  "id": "b7P0KavrdQTgPjyX",
+  "tags": []
+}
